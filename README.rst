@@ -186,6 +186,33 @@ Example
 Modules
 -------
 
+Pattern Module
+
+Allows to define your request path patterns. For example, in url structure on your project all brands have format like
+``/brand/slug...`` you can group them by pattern:
+
+::
+
+    modules:
+        pattern:
+            package: "module.pattern"
+            class: "PatternModule"
+            ...
+            options:
+                ...
+                brand:
+                    from: '^/brand/.*'
+                    to: "Brand"
+                ...
+
+All urls starts with ``/brand/`` will have field ``request_path_pattern`` with value 'Brand' and you can use this
+in you reports, prints or queries
+
+::
+
+    $ nginxpla access_log print request_path_pattern count
+
+
 ASN Module
 
 Use GeoLite2-ASN.mmdb to get ``asn`` and ``ans_name`` variables to ``record``. ``asn_name`` contains company name from whois
