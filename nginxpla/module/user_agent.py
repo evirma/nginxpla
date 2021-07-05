@@ -3,7 +3,6 @@ from nginxpla.utils import generate_table
 from user_agents import parse
 from nginxpla.nginxpla_module import NginxplaModule
 from functools import lru_cache
-import hashlib
 
 
 class UserAgentModule(NginxplaModule):
@@ -75,16 +74,9 @@ class UserAgentModule(NginxplaModule):
 
         return record
 
-#    @lru_cache(maxsize=102400)
+    @lru_cache(maxsize=102400)
     def parse_ua(self, ua):
         return parse(ua)
-        # result = hashlib.md5(ua.encode())
-        # md5hash = result.hexdigest()
-        #
-        # if md5hash not in self.ua_cache:
-        #     self.ua_cache[md5hash] = parse(ua)
-        #
-        # return self.ua_cache[md5hash]
 
     def __init__(self, module_config: ModuleConfig):
         self.ua_cache = {}

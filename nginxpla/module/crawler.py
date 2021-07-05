@@ -1,8 +1,8 @@
 from nginxpla.module_config import ModuleConfig
 from nginxpla.utils import generate_table
 from crawlerdetect import CrawlerDetect
+from functools import lru_cache
 from nginxpla.nginxpla_module import NginxplaModule
-import hashlib
 
 
 class CrawlerModule(NginxplaModule):
@@ -35,17 +35,12 @@ class CrawlerModule(NginxplaModule):
 
         return record
 
+    @lru_cache(maxsize=102400)
     def parse_crawler(self, ua):
-        result = hashlib.md5(ua.encode())
-        md5hash = result.hexdigest()
+        if self.crawler_detect().isCrawler(ua):
+            return self.crawler.getMatches()
 
-        if md5hash not in self.crawler_cache:
-            if self.crawler_detect().isCrawler(ua):
-                self.crawler_cache[md5hash] = self.crawler.getMatches()
-            else:
-                self.crawler_cache[md5hash] = '-'
-
-        return self.crawler_cache[md5hash]
+        return '-'
 
     def crawler_detect(self):
         if self.crawler is None:
