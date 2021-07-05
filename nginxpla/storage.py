@@ -1,6 +1,7 @@
 import sqlite3
 import logging
 import sys
+from nginxpla.error import error_exit
 from contextlib import closing
 from tqdm import tqdm
 
@@ -48,6 +49,10 @@ class LogStorage(object):
         self.report_queries = None
         self.indexes = indexes if indexes is not None else []
         self.fields = set(fields)
+
+        if len(fields) == 0:
+            error_exit("Field list to import in sqlite3 is empty")
+
         self.column_list = ','.join(fields)
         self.holder_list = ','.join(':%s' % var for var in fields)
         self.conn = sqlite3.connect(':memory:', isolation_level='DEFERRED')

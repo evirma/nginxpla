@@ -44,7 +44,7 @@ def setup_reporter(reporter: Reporter, interval):
 
 def install():
     cwd = os.path.dirname(os.path.abspath(__file__))
-    dist_dir = cwd + '/config.dist'
+    dist_dir = cwd + '/config'
 
     if os.path.exists(HOME):
         error_exit("Config directory " + HOME + " already exists. If you want reinstall, remove directory " + HOME)
@@ -135,9 +135,17 @@ def command_fields_parser(fields):
             select.append("count(CASE WHEN status_type = 3 THEN 1 END) AS '3xx'")
             select.append("count(CASE WHEN status_type = 4 THEN 1 END) AS '4xx'")
             select.append("count(CASE WHEN status_type = 5 THEN 1 END) AS '5xx'")
+        elif field == 'sum_request_time':
+            select.append('sum(request_time) as sum_request_time')
+        elif field == 'avg_request_time':
+            select.append('sum(request_time) as sum_request_time')
         elif field == 'request_time':
             select.append('sum(request_time) as sum_request_time')
             select.append('avg(request_time) as avg_request_time')
+        elif field == 'sum_bytes_sent':
+            select.append('sum(bytes_sent) as sum_b_sent_human_size')
+        elif field == 'avg_bytes_sent':
+            select.append('sum(bytes_sent) as sum_b_sent_human_size')
         elif field == 'bytes_sent':
             select.append('sum(bytes_sent) as sum_b_sent_human_size')
             select.append('round(avg(bytes_sent)) as avg_b_sent_human_size')
@@ -156,7 +164,7 @@ def load_template_modules(config: Config):
     template = config.template_name
     templates = config.templates()
     modules = []
-    for module_name in templates[template]['modules']:
+    for module_name in config.modules():
         module = ModuleConfig(module_name, templates[template]['modules'][module_name], config)
         modules.append(module)
 

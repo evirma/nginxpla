@@ -11,6 +11,7 @@ from nginxpla.storage import LogStorage
 class Config(object):
     def __init__(self, config_file: None, arguments):
         self.access_log = arguments['<access-log-file>']
+
         if self.access_log != 'stdin' and not os.path.exists(self.access_log):
             error_exit('access log file "%s" does not exist' % self.access_log)
 
@@ -20,6 +21,13 @@ class Config(object):
         self.config_file = config_file
         if not os.path.exists(config_file):
             error_exit('nginxpla config file not found: %s' % config_file)
+
+        requested_modules = arguments['--modules']
+
+        if requested_modules == 'all':
+            self.requested_modules = None
+        else:
+            self.requested_modules = requested_modules.split(',')
 
         self.arguments = arguments
         self.template_name = arguments['--template']
@@ -39,7 +47,8 @@ class Config(object):
 
         result = []
         for module in template['modules']:
-            result.append(module)
+            if self.requested_modules is None or module in self.requested_modules:
+                result.append(module)
 
         return result
 
@@ -83,7 +92,7 @@ class Config(object):
         indexes = self.fields
 
         template = self.template(self.template_name)
-        for module in template['modules']:
+        for module in self.modules():
             if 'indexes' in template['modules'][module]:
                 module_fields = template['modules'][module]['indexes']
                 indexes = indexes.union(set(module_fields))
@@ -97,7 +106,7 @@ class Config(object):
 
         if not self.arguments['<var>']:
             template = self.template(self.template_name)
-            for module in template['modules']:
+            for module in self.modules():
                 if 'fields' in template['modules'][module]:
                     module_fields = template['modules'][module]['fields']
                     fields = fields.union(set(module_fields))
@@ -125,17 +134,20 @@ class Config(object):
         if not formats:
             return ''
 
-        format_name = ''
+        if self.arguments['--log-format']:
+            format_name = self.arguments['--log-format']
+        else:
+            format_name = ''
 
-        logs = self.get('logs', [])
-        for log_section in logs:
-            log_data = logs[log_section]
-            if re.search(log_data['log_path_regexp'], access_log):
-                format_name = logs[log_section]['format']
-                break
+            logs = self.get('logs', [])
+            for log_section in logs:
+                log_data = logs[log_section]
+                if re.search(log_data['log_path_regexp'], access_log):
+                    format_name = logs[log_section]['format']
+                    break
 
-        if format_name == '':
-            format_name = 'combined'
+            if format_name == '':
+                format_name = 'combined'
 
         if format_name in formats:
             return str(formats[format_name])

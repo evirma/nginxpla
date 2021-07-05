@@ -15,6 +15,10 @@ class PatternModule(SimpleModule):
 
         request_path_pattern = record.get('request_path', None)
 
+        if request_path_pattern is None:
+            record['request_path_pattern'] = '-'
+            return record
+
         options = self.config.options
 
         if not options:

@@ -21,7 +21,7 @@ setup(
         'Programming Language :: Python :: 3.3',
     ],
     keywords='cli monitoring nginx log access_log system',
-    packages=find_packages(),
+    packages=["nginxpla", "nginxpla/module"],
     install_requires=[
         'docopt',
         'tabulate',
@@ -33,9 +33,8 @@ setup(
         'user-agents',
         'tqdm'
     ],
-    include_package_data=True,
     package_data={
-        "nginxpla": ["config.dist/*"],
+        "nginxpla": ["config/*", "config/module/you_name/*"]
     },
     entry_points={
         'console_scripts': [

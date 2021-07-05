@@ -2,8 +2,9 @@
 
 Usage:
     nginxpla <access-log-file> [options]
-    nginxpla <access-log-file> [options] (print|top|avg|sum) <var> ...
+    nginxpla <access-log-file> [options] (print) <var> ...
     nginxpla <access-log-file> [options] (query) <query> ...
+    nginxpla [options]
     nginxpla (-h | --help)
     nginxpla --install
     nginxpla --version
@@ -13,16 +14,16 @@ Options:
     -f <format>, --log-format <format>  log format as specify in log_format directive. [default: combined]
     -i <seconds>, --interval <seconds>  report interval when running in --top mode [default: 2.0]
     -t <template>, --template <template>  use template from config file [default: main]
-    -m <modules>, --module <modules>  comma separated module list [default: all]
+    -m <modules>, --modules <modules>  comma separated module list [default: all]
 
     --info  print configuration info for access_log
     --top  watch for new lines as they are written to the access log.
 
+    --fields <fields>  Fields to import in sqlite3 log table, for example, --fields user_agent,status
     -g <var>, --group-by <var>  group by variable [default: ]
     -w <var>, --having <expr>  having clause [default: 1]
     -o <var>, --order-by <var>  order of output for default query [default: count]
     -n <number>, --limit <number>  limit the number of records included in report [default: 10]
-    -a <exp> ..., --a <exp> ...  add exp (must be aggregation exp: sum, avg, min, max, etc.) into output
 
     -v, --verbose  more verbose output
     -d, --debug  print every line and parsed record
@@ -33,18 +34,25 @@ Options:
     -c <file>, --config <file>  nginxpla config file path.
     -e <filter-expression>, --filter <filter-expression>  filter in, records satisfied given expression are processed.
     -p <filter-expression>, --pre-filter <filter-expression>  in-filter expression to check in pre-parsing phase.
-    -s <sql-request>, --sql <sql-request>  raw Sql in sqlite format. Table with data is log
-    --fields <fields>  Fields to import in sqllite log table, for example, --fields user_agent,status
 
 Examples:
-    Print statistics for default template
+    Show reports for main template
     $ nginxpla access_log
 
-    Select All indexed data from base
-    $ nginxpla access_log --sql select * from log
+    Show reports for seo template
+    $ nginxpla access_log --template seo
+
+    Print reports for main template asn and referrer modules only
+    $ nginxpla access_log --template seo --modules asn,referer
+
+    Print report table for request_path counts
+    $ nginxpla access_log print request_path count
 
     Select All indexed data from base
-    $ nginxpla access_log --sql 'SELECT user_agent, status, count(1) AS count FROM
+    $ nginxpla access_log query select * from log
+
+    Select User Agent Statuses
+    $ nginxpla access_log query 'SELECT user_agent, status, count(1) AS count FROM
       log GROUP BY user_agent, status ORDER BY count DESC LIMIT 100' --fields user_agent,status
 
     Average body bytes sent of 200 responses of requested path begin with '/catalog':
@@ -72,6 +80,9 @@ def process(arguments):
         install()
         from nginxpla import CONFIG_FILE
         message_exit("Config installed successful. Please, edit %s" % CONFIG_FILE)
+
+    if arguments['<access-log-file>'] is None and not sys.stdin.isatty():
+        arguments['<access-log-file>'] = 'stdin'
 
     #
     # Loading and parse config file

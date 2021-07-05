@@ -44,7 +44,7 @@ Modular structure with several modules included.
         -f <format>, --log-format <format>  log format as specify in log_format directive. [default: combined]
         -i <seconds>, --interval <seconds>  report interval when running in --top mode [default: 2.0]
         -t <template>, --template <template>  use template from config file [default: main]
-        -m <modules>, --module <modules>  comma separated module list [default: all]
+        -m <modules>, --modules <modules>  comma separated module list [default: all]
 
         --info  print configuration info for access_log
         --top  watch for new lines as they are written to the access log.

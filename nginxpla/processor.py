@@ -14,6 +14,7 @@ try:
 except ImportError:
     import urllib.parse as urlparse
 
+
 def seek_n_lines(f, n):
     assert n >= 0
     pos, lines = n + 1, []
@@ -70,6 +71,19 @@ def records_transformer(records, handlers, config: Config):
             if alias in record and aliases[alias] not in record:
                 record[aliases[alias]] = record[alias]
 
+        if 'status' in record:
+            record['status'] = int(record['status'])
+
+        if 'bytes_sent' in record:
+            record['bytes_sent'] = int(record['bytes_sent'])
+
+        if 'request_time' in record:
+            record['request_time'] = float(record['request_time'])
+
+        if 'upstream_response_time' in record:
+            urt = record['upstream_response_time']
+            record['upstream_response_time'] = 0 if urt == '-' else float(urt)
+
         if config.is_field_needed('status') or config.is_field_needed('status_type'):
             if 'status' in record:
                 record['status_type'] = int(record['status']) // 100
@@ -79,7 +93,7 @@ def records_transformer(records, handlers, config: Config):
         if config.is_field_needed('bytes_sent'):
             if 'bytes_sent' not in record:
                 if 'body_bytes_sent' in record:
-                    record['bytes_sent'] = record['body_bytes_sent']
+                    record['bytes_sent'] = int(record['body_bytes_sent'])
                 else:
                     record['bytes_sent'] = 0
 
@@ -147,6 +161,7 @@ class Processor:
         records = parse_log(lines, pattern, config, self.modules)
 
         filter_exp = config.arguments['--filter']
+
         if filter_exp:
             records = (r for r in records if eval(filter_exp, {}, r))
 
@@ -156,5 +171,4 @@ class Processor:
         pattern = re.sub(self.REGEX_SPECIAL_CHARS, r'\\\1', log_format)
         pattern = re.sub(self.REGEX_LOG_FORMAT_VARIABLE, '(?P<\\1>.*)', pattern)
 
-        print(pattern)
         return re.compile(pattern)
