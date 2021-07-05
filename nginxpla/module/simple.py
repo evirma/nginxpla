@@ -1,13 +1,12 @@
-from nginxpla.utils import generate_table
 from nginxpla.module_config import ModuleConfig
 from nginxpla.nginxpla_module import NginxplaModule
+from nginxpla.reporter_helper import ReporterHelper
 
 
 class SimpleModule(NginxplaModule):
     def report(self):
         config = self.config
-        [header, data] = config.storage.fetchtable(config.sql, config.arguments)
-        return generate_table(header, data)
+        return ReporterHelper(config.storage, config.arguments).sql_reports(config.reports)
 
     def handle_record(self, record) -> str:
         self.is_needed = False

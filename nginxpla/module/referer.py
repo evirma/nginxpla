@@ -1,15 +1,9 @@
-from nginxpla.utils import generate_table
 from nginxpla.module_config import ModuleConfig
 from urllib.parse import urlparse
-from nginxpla.nginxpla_module import NginxplaModule
+from nginxpla.module.simple import SimpleModule
 
 
-class RefererModule(NginxplaModule):
-    def report(self):
-        config = self.config
-        [header, data] = config.storage.fetchtable(config.sql, config.arguments)
-        return generate_table(header, data)
-
+class RefererModule(SimpleModule):
     def handle_record(self, record):
         if self.is_needed is False:
             return record
@@ -36,5 +30,7 @@ class RefererModule(NginxplaModule):
         return record
 
     def __init__(self, module_config: ModuleConfig):
+        super(RefererModule, self).__init__(module_config)
+
         self.is_needed = None
         self.config = module_config

@@ -1,4 +1,5 @@
 from __future__ import print_function
+
 from nginxpla.config import Config
 from nginxpla.module_config import ModuleList
 
@@ -22,7 +23,7 @@ class Reporter:
             module_report = module.factory().report()
             output.append('%s%s' % (label, module_report))
 
-        report = '\n\n'.join(output)
+        report = ''.join(output)
 
         for module in self.modules:
             report = module.factory().handle_report(report)

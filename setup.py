@@ -5,7 +5,7 @@ from nginxpla import __version__
 setup(
     name='nginxpla',
     version=__version__,
-    description='Small and powerful real-time nginx access log metrics query and analyzer with top-like style support',
+    description='Small and powerful real-time python nginx access log parser and analyzer with top-like style support',
     long_description=open('README.rst').read(),
     license='MIT',
     url='https://github.com/evirma/nginxpla',

@@ -93,6 +93,7 @@ def process(arguments):
         print('Modules: %s' % ','.join(config.modules()))
         print('Fields: %s' % ','.join(config.fields))
     else:
+        output = ''
         reporter = Reporter(config, modules)
 
         if arguments['--top'] and not arguments['print']:
@@ -104,14 +105,19 @@ def process(arguments):
             print_command_builder(arguments, config.storage)
         elif arguments['query']:
             [header, data] = config.storage.fetchtable(' '.join(arguments['<query>']))
-            print(generate_simple_table(header, data))
+            output += generate_simple_table(header, data)
         else:
-            print(reporter.report())
+            output += reporter.report()
+            print()
 
         runtime = time.time() - start
         lines = config.storage.count()
 
-        print("\n > running for %i seconds, %i records processed: %.2f req/sec" % (runtime, lines, lines / runtime))
+        output = output.rstrip("\n")
+        output += "\n\n > running for %i seconds, %i records processed: %.2f req/sec" % \
+                  (runtime, lines, lines / runtime)
+
+        print(output)
 
 
 def print_command_builder(arguments, storage):

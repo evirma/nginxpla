@@ -1,16 +1,10 @@
 import re
 from nginxpla.error import error_exit
 from nginxpla.module_config import ModuleConfig
-from nginxpla.utils import generate_table
-from nginxpla.nginxpla_module import NginxplaModule
+from nginxpla.module.simple import SimpleModule
 
 
-class PatternModule(NginxplaModule):
-    def report(self):
-        config = self.config
-        [header, data] = config.storage.fetchtable(config.sql, config.arguments)
-        return generate_table(header, data)
-
+class PatternModule(SimpleModule):
     def handle_record(self, record):
         if self.is_needed is False:
             return record
@@ -38,5 +32,7 @@ class PatternModule(NginxplaModule):
         return record
 
     def __init__(self, module_config: ModuleConfig):
+        super(PatternModule, self).__init__(module_config)
+
         self.is_needed = None
         self.config = module_config

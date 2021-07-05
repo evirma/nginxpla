@@ -4,8 +4,8 @@
 
 Inspired by `ngxtop <https://github.com/lebinh/ngxtop>`_
 
-``nginxpla`` is console nginx's log parser and analyser. Fully configurable reports and templates. 
-Like ``ngxtop`` it allows build ``top``-like custom reports by choose metrics.
+``nginxpla`` is console nginx's log parser and analyser written in python. Fully configurable reports and templates.
+Like ``ngxtop`` it allows build ``top``-like custom reports by chosen metrics.
 I have tried my best to do it customizable and extendable. 
 
     ``nginxpla`` is very powefull for troubleshooting and monitoring your Nginx server here and now. 

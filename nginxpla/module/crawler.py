@@ -2,19 +2,10 @@ from nginxpla.module_config import ModuleConfig
 from nginxpla.utils import generate_table
 from crawlerdetect import CrawlerDetect
 from functools import lru_cache
-from nginxpla.nginxpla_module import NginxplaModule
+from nginxpla.module.simple import SimpleModule
 
 
-class CrawlerModule(NginxplaModule):
-    def report(self):
-        config = self.config
-
-        if not config.sql:
-            return ''
-
-        [header, data] = config.storage.fetchtable(config.sql, config.arguments)
-        return generate_table(header, data)
-
+class CrawlerModule(SimpleModule):
     def handle_record(self, record):
         if self.is_needed is False:
             return record
@@ -49,6 +40,8 @@ class CrawlerModule(NginxplaModule):
         return self.crawler
 
     def __init__(self, module_config: ModuleConfig):
+        super(CrawlerModule, self).__init__(module_config)
+
         self.crawler_cache = {}
         self.crawler = None
         self.is_needed = None

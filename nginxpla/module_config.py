@@ -18,6 +18,7 @@ class ModuleConfig(object):
         self.storage = False
         self.arguments = config.arguments
         self.sql = '' if 'sql' not in module_config else module_config['sql']
+        self.reports = [] if 'reports' not in module_config else module_config['reports']
 
         self.fields = set([])
         if 'fields' in module_config:
