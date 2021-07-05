@@ -34,9 +34,6 @@ class Config(object):
     def fields_union(self, fields: set):
         self.fields = self.fields.union(fields)
 
-    # def set_modules(self, modules: ModuleList):
-    #     self.modules = modules
-
     def modules(self):
         template = self.template(self.template_name)
 
@@ -55,9 +52,6 @@ class Config(object):
             return templates[name]
 
         return {}
-
-    # def module_list(self) -> ModuleList:
-    #     return self.modules
 
     def aliases(self):
         result = {}
@@ -126,46 +120,24 @@ class Config(object):
 
         return set(result)
 
+    def match_log_format(self, access_log, format_section: 'format'):
+        formats = self.get(format_section, [])
+        if not formats:
+            return ''
 
-def match_log_format(access_log, config: Config) -> str:
-    formats = config.get('formats', [])
-    if not formats:
+        format_name = ''
+
+        logs = self.get('logs', [])
+        for log_section in logs:
+            log_data = logs[log_section]
+            if re.search(log_data['log_path_regexp'], access_log):
+                format_name = logs[log_section]['format']
+                break
+
+        if format_name == '':
+            format_name = 'combined'
+
+        if format_name in formats:
+            return str(formats[format_name])
+
         return ''
-
-    format_name = ''
-
-    logs = config.get('logs', [])
-    for log_section in logs:
-        if re.search(r'seller', access_log):
-            format_name = logs[log_section]['format']
-            break
-
-    if format_name == '':
-        format_name = 'combined'
-
-    if format_name in formats:
-        return str(formats[format_name])
-
-    return ''
-
-
-def match_log_format_regex(access_log, config: Config) -> str:
-    regex_formats = config.get('regex_formats')
-    if not regex_formats:
-        return ''
-
-    logs = config.get('logs', [])
-
-    format_name = ''
-    for log_section in logs:
-        if re.search(r'seller', access_log):
-            format_name = logs[log_section]['format']
-            break
-
-    if format_name == '':
-        format_name = 'combined'
-
-    if format_name in regex_formats:
-        return str(regex_formats[format_name])
-
-    return ''

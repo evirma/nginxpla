@@ -37,7 +37,6 @@ class ModuleConfig(object):
         if self.instance is False:
             sys.path.append(CUSTOM_MODULES_DIR)
             mod = __import__(self.package, fromlist=[self.class_name])
-            print(mod)
             self.instance = getattr(mod, self.class_name)(self)
         return self.instance
 

@@ -6,16 +6,13 @@ import time
 import re
 import os
 
-from nginxpla.config import match_log_format, match_log_format_regex, Config
+from nginxpla.config import Config
 from nginxpla.module_config import ModuleList
 
 try:
     import urlparse
 except ImportError:
     import urllib.parse as urlparse
-
-from .log_format import build_pattern
-
 
 def seek_n_lines(f, n):
     assert n >= 0
@@ -123,6 +120,9 @@ def parse_log(lines, pattern, config: Config, modules: ModuleList):
 
 
 class Processor:
+    REGEX_SPECIAL_CHARS = r'([\.\*\+\?\|\(\)\{\}\[\]])'
+    REGEX_LOG_FORMAT_VARIABLE = r'\$([a-zA-Z0-9\_]+)'
+
     def __init__(self, config: Config, modules: ModuleList):
         self.config = config
         self.modules = modules
@@ -132,13 +132,13 @@ class Processor:
         access_log = config.access_log
         lines = build_source(access_log, config.arguments)
 
-        log_format_regex = match_log_format_regex(access_log, config)
+        log_format_regex = config.match_log_format(access_log, 'regex_formats')
 
         if log_format_regex:
             pattern = re.compile(log_format_regex)
         else:
-            log_format = match_log_format(access_log, config)
-            pattern = build_pattern(log_format)
+            log_format = config.match_log_format(access_log, 'format')
+            pattern = self.build_pattern(log_format)
 
         pre_filer_exp = config.arguments['--pre-filter']
         if pre_filer_exp:
@@ -151,3 +151,10 @@ class Processor:
             records = (r for r in records if eval(filter_exp, {}, r))
 
         config.storage.import_records(records)
+
+    def build_pattern(self, log_format):
+        pattern = re.sub(self.REGEX_SPECIAL_CHARS, r'\\\1', log_format)
+        pattern = re.sub(self.REGEX_LOG_FORMAT_VARIABLE, '(?P<\\1>.*)', pattern)
+
+        print(pattern)
+        return re.compile(pattern)

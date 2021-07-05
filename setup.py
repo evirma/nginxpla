@@ -12,7 +12,6 @@ setup(
     author='Eugene Myazin',
     author_email='eugene.myazin@gmail.com',
     classifiers=[
-        'Development Status :: Beta',
         'License :: OSI Approved :: MIT License',
         'Environment :: Console',
         'Intended Audience :: Developers',
