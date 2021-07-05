@@ -1,0 +1,427 @@
+#
+# Log associator with format
+#
+# If log file name matched with log_path_regexp 
+# it will be parsed with defined format name
+#
+# log_pattern_name:
+#     log_path_regexp: <Python Style RegExp>
+#     format: <Format Name>
+#
+logs:
+    log_pattern_name:
+        log_path_regexp: 'my_domain\.access\.log'
+        format: "custom"
+    fallback_to_combined:
+       log_path_regexp: '.*'
+       format: "combined"
+
+#
+# Log Formats
+#
+#  name: <nginx like format>
+#
+formats:
+    default: '$remote_addr - $remote_user [$time_local] "$request" $status $body_bytes_sent "$http_x_forwarded_for"'
+    combined: '$remote_addr - $remote_user [$time_local] "$request" $status $body_bytes_sent "$http_referer" "$http_user_agent"'
+    custom: '$http_x_forwarded_for - [$time_local] "$host" "$request" $status ($bytes_sent) "$http_referer" "$uri $args" "$http_user_agent" [$request_time] [$upstream_response_time]'
+
+#
+# For The Best Performance Use Python Regexp
+# If regex format exists it will be used instead regular format
+#
+regex_formats:
+    custom: '(?P<http_x_forwarded_for>[^\s]+) - \[(?P<time_local>[^]]+)\] "(?P<host>[^"]+)" "(?P<request>[^"]+)" (?P<status>\d{3}) \((?P<bytes_sent>\d+)\) "(?P<http_referer>[^"]+)" "(?P<unused>[^"]+)" "(?P<http_user_agent>[^"]+)" \[(?P<request_time>[\d.-]+)\] \[(?P<upstream_response_time>[\d.-]+)\]'
+
+templates:
+    main:
+        modules:
+            summary:
+                package: "module.simple"
+                class: "SimpleModule"
+                fields:
+                    - request_path
+                    - bytes_sent
+                    - status_type
+                    - request_time
+                indexes:
+                    - request_path
+                reports:
+                    summary:
+                        label: "Summary:"
+                        sql: |
+                            SELECT
+                                count(1)                                    AS count,
+                                sum(bytes_sent)                             AS sum_bytes_sent_human_size,
+                                round(sum(request_time),3)                  AS total_time,
+                                round(avg(request_time),3)                  AS avg_time,
+                                count(CASE WHEN status_type = 2 THEN 1 END) AS '2xx',
+                                count(CASE WHEN status_type = 3 THEN 1 END) AS '3xx',
+                                count(CASE WHEN status_type = 4 THEN 1 END) AS '4xx',
+                                count(CASE WHEN status_type = 5 THEN 1 END) AS '5xx'
+                            FROM log
+                            ORDER BY %(--order-by)s DESC
+                            LIMIT  %(--limit)s
+                    detailed:
+                        label: "Detailed:"
+                        sql: |
+                            SELECT
+                                request_path,
+                                count(1)                                    AS count,
+                                sum(bytes_sent)                             AS sum_size_human_size,
+                                sum(request_time)                           AS total_time,
+                                avg(request_time)                           AS avg_time,
+                                count(CASE WHEN status_type = 2 THEN 1 END) AS '2xx',
+                                count(CASE WHEN status_type = 3 THEN 1 END) AS '3xx',
+                                count(CASE WHEN status_type = 4 THEN 1 END) AS '4xx',
+                                count(CASE WHEN status_type = 5 THEN 1 END) AS '5xx'
+                            FROM log
+                            GROUP BY request_path
+                            HAVING %(--having)s
+                            ORDER BY %(--order-by)s DESC
+                            LIMIT  %(--limit)s
+            se:
+                package: "module.search_engine"
+                class: "SearchEngineModule"
+                fields:
+                    - request_path
+                    - bytes_sent
+                    - status_type
+                    - http_user_agent
+                    - request_time
+                    - se
+                indexes:
+                    - se
+                reports:
+                    top_search_engine:
+                        label: "Top Search Engines"
+                        sql: |
+                            SELECT
+                                se                                          AS Search_Engine,
+                                count(1)                                    AS count,
+                                sum(bytes_sent)                             AS sum_bytes_sent_human_size,
+                                sum(request_time)                           AS total_time,
+                                avg(request_time)                           AS avg_time,
+                                count(CASE WHEN status_type = 2 THEN 1 END) AS '2xx',
+                                count(CASE WHEN status_type = 3 THEN 1 END) AS '3xx',
+                                count(CASE WHEN status_type = 4 THEN 1 END) AS '4xx',
+                                count(CASE WHEN status_type = 5 THEN 1 END) AS '5xx'
+                            FROM log
+                            GROUP BY se
+                            HAVING %(--having)s
+                            ORDER BY %(--order-by)s DESC
+                            LIMIT  %(--limit)s
+                options:
+                    engines:
+                        google:
+                            title: "Google Bot"
+                            searches:
+                                - "Googlebot"
+                                - "Mediapartners-Google"
+                                - "AdsBot-Google"
+                        bing:
+                            title: "Bing Bot"
+                            searches:
+                                - "Bingbot"
+                        yahoo:
+                            title: "Yahoo Slurp"
+                            searches:
+                                - "Slurp"
+                        duckduck:
+                            title: "DuckDuck Bot"
+                            searches:
+                                - "DuckDuckBot"
+                        baidu:
+                            title: "Baidu Bot"
+                            searches:
+                                - "Baiduspider"
+                        sogou:
+                            title: "Sogou Bot"
+                            searches:
+                                - "Sogou"
+                        exabot:
+                            title: "Exabot"
+                            searches:
+                                - "Exabot"
+                        facebook:
+                            title: "Facebook Bot"
+                            searches:
+                                - "facebot"
+                                - "facebookexternalhit"
+                        alexa:
+                            title: "Alexa Bot"
+                            searches:
+                                - "ia_archiver"
+                        yandex_images:
+                            title: "Yandex.Images"
+                            searches:
+                                - "YandexImages"
+                        yandex_direct:
+                            title: "Yandex.Direct"
+                            searches:
+                                - "YandexDirect"
+                        yandex:
+                            title: Yandex
+                            searches:
+                                - "YandexBot"
+            pattern:
+                package: "module.pattern"
+                class: "PatternModule"
+                fields:
+                    - request_path
+                    - bytes_sent
+                    - status_type
+                    - request_time
+                    - request_path_pattern
+                indexes:
+                    - request_path_pattern
+                reports:
+                    top_patterns:
+                        label: "Requests By Pattern:"
+                        sql: |
+                            SELECT
+                                request_path_pattern                        AS Request_Path_Pattern,
+                                count(1)                                    AS count,
+                                sum(bytes_sent)                             AS sum_bytes_sent_human_size,
+                                sum(request_time)                           AS total_time,
+                                avg(request_time)                           AS avg_time,
+                                count(CASE WHEN status_type = 2 THEN 1 END) AS '2xx',
+                                count(CASE WHEN status_type = 3 THEN 1 END) AS '3xx',
+                                count(CASE WHEN status_type = 4 THEN 1 END) AS '4xx',
+                                count(CASE WHEN status_type = 5 THEN 1 END) AS '5xx'
+                            FROM log
+                            GROUP BY request_path_pattern
+                            HAVING %(--having)s
+                            ORDER BY %(--order-by)s DESC
+                            LIMIT  %(--limit)s
+                options:
+                    sections: 0
+                    replaces:
+                        rubric_brand:
+                            from: '^/c/\d+/b.*'
+                            to: "Product"
+                        rubric:
+                            from: '^/c/.*'
+                            to: "Rubric"
+                        brand:
+                            from: '^/b.*'
+                            to: "Brand"
+                        seller:
+                            from: '^/s.*'
+                            to: "Seller"
+                        mpn:
+                            from: '^/m.*'
+                            to: "Mpn"
+                        rating:
+                            from: '^/r.*'
+                            to: "Rating"
+                        go:
+                            from: '^/go/.*'
+                            to: "Go Out"
+                        bp:
+                            from: '^/bp/.*'
+                            to: "Best Products"
+                        sitemap:
+                            from: '.*sitemap.*'
+                            to: "Sitemap"
+                        hacks:
+                            from: '.*(phpunit|wp-|xmlrpc.php|adminer|symptom|login.php|upload.php|Autodiscover|execute-solution|/console/|/remote/|/airflow/).*'
+                            to: "Dirty Hacks"
+                        digits:
+                            from: '\d+'
+                            to: "(d)"
+                        hash_path:
+                            from: '/[abcdef0123456789]{2}(/|$)'
+                            to: "(h)"
+            asn:
+                package: "module.asn"
+                class: "AsnModule"
+                fields:
+                    - status_type
+                    - remote_addr
+                    - asn
+                    - asn_name
+                    - bytes_sent
+                    - request_time
+                inedxes:
+                    - asn_name
+                reports:
+                    top_count:
+                        label: "ASN Top:"
+                        sql: |
+                            SELECT
+                                asn_name                                    AS Company,
+                                asn                                         AS ASN,
+                                count(1)                                    AS Count,
+                                sum(bytes_sent)                             AS sum_bytes_sent_human_size,
+                                sum(request_time)                           AS total_time,
+                                avg(request_time)                           AS avg_time,
+                                count(CASE WHEN status_type = 2 THEN 1 END) AS '2xx',
+                                count(CASE WHEN status_type = 3 THEN 1 END) AS '3xx',
+                                count(CASE WHEN status_type = 4 THEN 1 END) AS '4xx',
+                                count(CASE WHEN status_type = 5 THEN 1 END) AS '5xx'
+                            FROM log
+                            GROUP BY asn_name
+                            HAVING %(--having)s
+                            ORDER BY %(--order-by)s DESC
+                            LIMIT  %(--limit)s
+                options:
+                    # see https://dev.maxmind.com/geoip/updating-databases
+                    geolite2_asn_file: "/var/lib/GeoIP/GeoLite2-ASN.mmdb"
+            referer:
+                package: "module.referer"
+                class: "RefererModule"
+                fields:
+                    - status_type
+                    - referer_domain
+                    - referer
+                index:
+                    - referer_domain
+                reports:
+                    top_referrers:
+                        label: "Top referrers:"
+                        sql: |
+                            SELECT
+                                referer_domain                              AS Referrer_Domain,
+                                count(1)                                    AS Count,
+                                sum(bytes_sent)                             AS sum_bytes_sent_human_size,
+                                sum(request_time)                           AS total_time,
+                                avg(request_time)                           AS avg_time,
+                                count(CASE WHEN status_type = 2 THEN 1 END) AS '2xx',
+                                count(CASE WHEN status_type = 3 THEN 1 END) AS '3xx',
+                                count(CASE WHEN status_type = 4 THEN 1 END) AS '4xx',
+                                count(CASE WHEN status_type = 5 THEN 1 END) AS '5xx'
+                            FROM log
+                            GROUP BY referer_domain
+                            HAVING %(--having)s
+                            ORDER BY %(--order-by)s DESC
+                            LIMIT  %(--limit)s
+            user_agent:
+                package: "module.user_agent"
+                class: "UserAgentModule"
+            crawler:
+                package: "module.crawler"
+                class: "CrawlerModule"
+    seo:
+        modules:
+            se:
+                package: "module.search_engine"
+                class: "SearchEngineModule"
+                fields:
+                    - bytes_sent
+                    - request_time
+                    - status_type
+                    - se
+                indexes:
+                    - se
+                reports:
+                    top_search_engine:
+                        label: "Top Search Engines"
+                        sql: |
+                            SELECT
+                                se as Search_Engine,
+                                count(1)                                    AS count,
+                                sum(bytes_sent)                             AS sum_bytes_sent_human_size,
+                                sum(request_time)                           AS total_time,
+                                avg(request_time)                           AS avg_time,
+                                count(CASE WHEN status_type = 2 THEN 1 END) AS '2xx',
+                                count(CASE WHEN status_type = 3 THEN 1 END) AS '3xx',
+                                count(CASE WHEN status_type = 4 THEN 1 END) AS '4xx',
+                                count(CASE WHEN status_type = 5 THEN 1 END) AS '5xx'
+                            FROM log
+                            GROUP BY se
+                            HAVING %(--having)s
+                            ORDER BY %(--order-by)s DESC
+                            LIMIT  %(--limit)s
+                options:
+                    engines:
+                        google:
+                            title: "Google Bot"
+                            searches:
+                                - "Googlebot"
+                                - "Mediapartners-Google"
+                                - "AdsBot-Google"
+                        bing:
+                            title: "Bing Bot"
+                            searches:
+                                - "Bingbot"
+                        yahoo:
+                            title: "Yahoo Slurp"
+                            searches:
+                                - "Slurp"
+                        duckduck:
+                            title: "DuckDuck Bot"
+                            searches:
+                                - "DuckDuckBot"
+                        baidu:
+                            title: "Baidu Bot"
+                            searches:
+                                - "Baiduspider"
+                        sogou:
+                            title: "Sogou Bot"
+                            searches:
+                                - "Sogou"
+                        exabot:
+                            title: "Exabot"
+                            searches:
+                                - "Exabot"
+                        facebook:
+                            title: "Facebook Bot"
+                            searches:
+                                - "facebot"
+                                - "facebookexternalhit"
+                        alexa:
+                            title: "Alexa Bot"
+                            searches:
+                                - "ia_archiver"
+                        yandex_images:
+                            title: "Yandex.Images"
+                            searches:
+                                - "YandexImages"
+                        yandex_direct:
+                            title: "Yandex.Direct"
+                            searches:
+                                - "YandexDirect"
+                        yandex:
+                            title: Yandex
+                            searches:
+                                - "YandexBot"
+
+
+#
+# DemoModule
+# You can find code in ~/.nginxpla/module/you_name/demo.py
+# Feel free to code your own, three days ago I could not code in Python at all, hmm, and now the same ;-)
+#
+#            you_name:
+#                package: "you_name.demo"
+#                class: "DemoModule"
+#                fields:
+#                    - has_query
+#                    - request_path
+#                index:
+#                    - has_query
+
+
+#
+# Defines aliases for variable
+#
+# For example, if you want that value $http_x_forwarded_for 
+# will be stored as different name, you should use construction
+# stored_name:
+#     - http_x_forwarded_for 
+#     - another_alias_name
+#
+aliases:
+    remote_addr:
+        - http_x_forwarded_for
+    datetime:
+        - time_local
+    referer:
+        - http_referer
+    user_agent:
+        - http_user_agent
+
+#
+# Thats all, folks!
+#

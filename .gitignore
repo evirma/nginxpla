@@ -4,5 +4,5 @@ dist
 __pycache__
 nginxpla.egg-info
 venv
-nginxpla.yaml
+/nginxpla.yaml
 sellercheck.*
