@@ -6,7 +6,7 @@ import atexit
 import signal
 import curses
 import tabulate
-from shutil import copyfile
+from shutil import copytree
 from nginxpla import HOME
 from nginxpla.error import error_exit
 from nginxpla.reporter import Reporter
@@ -44,19 +44,12 @@ def setup_reporter(reporter: Reporter, interval):
 
 def install():
     cwd = os.path.dirname(os.path.abspath(__file__))
-    dist_config = cwd + '/config.dist/nginxpla.yaml.dist'
-    config = HOME + '/nginxpla.yaml'
+    dist_dir = cwd + '/config.dist'
 
-    if not os.path.isdir(HOME):
-        makedirs(HOME)
+    if os.path.exists(HOME):
+        error_exit("Config directory " + HOME + " already exists. If you want reinstall, remove directory " + HOME)
 
-    if not os.path.isdir(HOME):
-        error_exit("Directory " + HOME + " does not exists")
-
-    if os.path.exists(config):
-        error_exit("Config file " + config + " already exists")
-
-    copyfile(dist_config, config)
+    copytree(dist_dir, HOME)
 
 
 def generate_table(columns, data):
