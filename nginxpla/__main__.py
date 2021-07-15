@@ -11,7 +11,7 @@ Usage:
 
 Options:
     -l <file>, --access-log <file>  access log file to parse.
-    -f <format>, --log-format <format>  log format as specify in log_format directive. [default: combined]
+    -f <format>, --log-format <format>  log format as specify in log_format directive. [default: ]
     -i <seconds>, --interval <seconds>  report interval when running in --top mode [default: 2.0]
     -t <template>, --template <template>  use template from config file [default: main]
     -m <modules>, --modules <modules>  comma separated module list [default: all]
@@ -98,11 +98,20 @@ def process(arguments):
     # Init Storage and set storage to each ModuleConfig
     #
     if arguments['--info']:
-        print('Config File: %s' % arguments['--config'], end="\n\n")
+        access_log = arguments['<access-log-file>']
+        log_format_regex = config.match_log_format(access_log, 'regex_formats')
+
+        print('Config File: %s' % config.config_file, end="\n\n")
         print('Log File: %s' % arguments['<access-log-file>'], end="\n\n")
         print('Template: %s' % config.template_name)
         print('Modules: %s' % ','.join(config.modules()))
         print('Fields: %s' % ','.join(config.fields))
+
+        if log_format_regex:
+            print('Log Format RegExp: %s' % log_format_regex)
+        else:
+            log_format = config.match_log_format(access_log, 'formats')
+            print('Log Format: %s' % log_format)
     else:
         output = ''
         reporter = Reporter(config, modules)

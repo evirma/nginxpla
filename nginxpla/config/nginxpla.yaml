@@ -10,7 +10,7 @@
 #
 logs:
     log_pattern_name:
-        log_path_regexp: 'my_domain\.access\.log'
+        log_path_regexp: 'access\.log'
         format: "custom"
     fallback_to_combined:
        log_path_regexp: '.*'

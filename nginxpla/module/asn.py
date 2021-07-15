@@ -5,6 +5,7 @@ from nginxpla.nginxpla_module import NginxplaModule
 from nginxpla.reporter_helper import ReporterHelper
 from functools import lru_cache
 import geoip2.database
+from geoip2.errors import AddressNotFoundError
 
 
 class AsnModule(NginxplaModule):
@@ -42,9 +43,12 @@ class AsnModule(NginxplaModule):
 
     @lru_cache(maxsize=102400)
     def get_asn(self, ip):
-        with geoip2.database.Reader(self.file) as reader:
-            response = reader.asn(ip)
-            result = [response.autonomous_system_number, response.autonomous_system_organization]
+        try:
+            with geoip2.database.Reader(self.file) as reader:
+                response = reader.asn(ip)
+                result = [response.autonomous_system_number, response.autonomous_system_organization]
+        except AddressNotFoundError:
+            result = ['-', '-']
 
         return result
 

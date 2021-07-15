@@ -1,4 +1,4 @@
-__version__ = '0.0.4'
+__version__ = '0.0.6'
 __aka__ = 'Nginx Python Log Analyser'
 
 import os

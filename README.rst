@@ -77,8 +77,8 @@ Modular structure with several modules included.
         Select All indexed data from base
         $ nginxpla access_log --sql 'SELECT user_agent, status, count(1) AS count FROM log GROUP BY user_agent, status ORDER BY count DESC LIMIT 100' --fields user_agent,status
 
-Configuration  
--------------
+Configuration
+#############
 
 After install configure logs-section:
 
@@ -183,8 +183,8 @@ Example
 
     running for 28 seconds, 361730 records processed: 12546.68 req/sec
 
-Modules
--------
+4. Modules
+----------
 
 Pattern Module
 
@@ -204,6 +204,8 @@ Allows to define your request path patterns. For example, in url structure on yo
                     from: '^/brand/.*'
                     to: "Brand"
                 ...
+
+For full module config see default `config example <https://github.com/evirma/nginxpla/blob/master/nginxpla/config/nginxpla.yaml>`_
 
 All urls starts with ``/brand/`` will have field ``request_path_pattern`` with value 'Brand' and you can use this
 in you reports, prints or queries
