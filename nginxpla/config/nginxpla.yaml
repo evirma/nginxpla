@@ -198,34 +198,55 @@ templates:
                     sections: 0
                     replaces:
                         rubric_brand:
-                            from: '^/c/\d+/b.*'
-                            to: "Product"
+                            from: '^/p-.*'
+                            to: "Product (/p-)"
                         rubric:
-                            from: '^/c/.*'
-                            to: "Rubric"
+                            from: '^/r-.*'
+                            to: "Rubric (/r-)"
                         brand:
-                            from: '^/b.*'
-                            to: "Brand"
-                        seller:
-                            from: '^/s.*'
-                            to: "Seller"
-                        mpn:
-                            from: '^/m.*'
-                            to: "Mpn"
-                        rating:
-                            from: '^/r.*'
-                            to: "Rating"
-                        go:
-                            from: '^/go/.*'
-                            to: "Go Out"
-                        bp:
-                            from: '^/bp/.*'
-                            to: "Best Products"
+                            from: '^/brand-.*'
+                            to: "Brand (/brand-)"
+                        event:
+                            from: '^/my/event'
+                            to: "Event"
+                        sale:
+                            from: '^/sale.*'
+                            to: "Sale (/sale)"
+                        shopping_cart:
+                            from: '^/my/(shopping-cart|cart).*'
+                            to: "Cart"
+                        static:
+                            from: '^/(atlas|tel:|image-bundle/).*'
+                            to: "Static"
+                        shop:
+                            from: '^/shop.*'
+                            to: "Shop (/shop)"
+                        search:
+                            from: '^(/my/search|/search).*'
+                            to: "Search"
+                        auth:
+                            from: '^(/my/authorization).*'
+                            to: "Auth"
+                        page:
+                            from: '^(/my/page|/page|/my/help).*'
+                            to: "Page"
+                        account:
+                            from: '^/my/account.*'
+                            to: "Account"
+                        old_catalog:
+                            from: '^/catalog/.*'
+                            to: "Old Catalog (/catalog)"
                         sitemap:
                             from: '.*sitemap.*'
                             to: "Sitemap"
+                        robots:
+                            from: '/robots'
+                            to: "Robots.txt"
+                        favicon:
+                            from: '^/(favicon|apple-touch|og.png).*'
+                            to: "Favicon"
                         hacks:
-                            from: '.*(phpunit|wp-|xmlrpc.php|adminer|symptom|login.php|upload.php|Autodiscover|execute-solution|/console/|/remote/|/airflow/).*'
+                            from: '.*(phpunit|.well-known|wp-|xmlrpc.php|adminer|symptom|login.php|upload.php|Autodiscover|execute-solution|/console/|/remote/|/airflow/).*'
                             to: "Dirty Hacks"
                         digits:
                             from: '\d+'
@@ -299,6 +320,32 @@ templates:
             user_agent:
                 package: "module.user_agent"
                 class: "UserAgentModule"
+                fields:
+                    - status_type
+                    - browser
+                    - is_bot
+                    - device_type
+                index:
+                    - browser
+                reports:
+                    top_bots:
+                        label: "Top Bots:"
+                        sql: |
+                            SELECT
+                                browser                                     AS User_Agent,
+                                count(1)                                    AS Count,
+                                sum(bytes_sent)                             AS sum_bytes_sent_human_size,
+                                sum(request_time)                           AS total_time,
+                                avg(request_time)                           AS avg_time,
+                                count(CASE WHEN status_type = 2 THEN 1 END) AS '2xx',
+                                count(CASE WHEN status_type = 3 THEN 1 END) AS '3xx',
+                                count(CASE WHEN status_type = 4 THEN 1 END) AS '4xx',
+                                count(CASE WHEN status_type = 5 THEN 1 END) AS '5xx'
+                            FROM log
+                            GROUP BY referer_domain
+                            HAVING %(--having)s
+                            ORDER BY %(--order-by)s DESC
+                            LIMIT  %(--limit)s
             crawler:
                 package: "module.crawler"
                 class: "CrawlerModule"
